@@ -1,9 +1,16 @@
-import React from 'react'
+import React from "react";
+import SignupForm from "./SignupForm";
+import AuthLayout from "@/app/components/AuthLayout";
 
-const page = () => {
+const Page = () => {
     return (
-        <div>Signup</div>
-    )
-}
+        <>
+            <AuthLayout>
+                <SignupForm />
+            </AuthLayout>
 
-export default page
+        </>
+    );
+};
+
+export default Page;

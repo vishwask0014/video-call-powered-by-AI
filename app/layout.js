@@ -1,4 +1,4 @@
-import "./globals.css";
+// import "./globals.css";
 import Header from "./components/header";
 import { Bebas_Neue, Space_Grotesk } from "next/font/google";
 
@@ -17,7 +17,7 @@ export default function RootLayout({ children }) {
       className="h-full antialiased"
     >
       <body className="min-h-full flex flex-col">
-        <Header />
+        {/* <Header /> */}
         {children}</body>
     </html>
   );

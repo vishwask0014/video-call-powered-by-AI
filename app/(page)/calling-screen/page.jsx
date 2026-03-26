@@ -1,8 +1,13 @@
+import React from 'react'
 
-export default function VideoCallScreen() {
-  return (
-    <>
-      Video screen
-    </>
-  );
+const page = () => {
+    return (
+        <>
+            <div>Chat</div>
+            <div>Video</div>
+            <div>Stream</div>
+        </>
+    )
 }
+
+export default page
