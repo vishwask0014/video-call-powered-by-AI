@@ -1,13 +1,23 @@
-'use client'
-import { useState, useEffect } from 'react';
-import { useCreateChatClient, Chat, Channel, ChannelHeader, MessageInput, MessageList, Thread, Window } from 'stream-chat-react';
-import 'stream-chat-react/dist/css/v2/index.css'
+"use client";
+import { useState, useEffect, useMemo } from "react";
+import {
+  useCreateChatClient,
+  Chat,
+  Channel,
+  ChannelHeader,
+  MessageInput,
+  MessageList,
+  Thread,
+  Window,
+  ChannelList,
+} from "stream-chat-react";
+import "stream-chat-react/dist/css/v2/index.css";
+// import '../../../globals.css';
 
-
-const apiKey = 'rn787jpx5xw2';
-const userId = 'gentle-poetry-3';
-const userName = 'gentle';
-const userToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZ2VudGxlLXBvZXRyeS0zIiwiZXhwIjoxNzc0NTMzODY0fQ.QFTd2NDRVbPhHU4nXm86Mz0k8LJGQEHV13KkFuSAeMY';
+const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
+const userId = "gentle-poetry-3";
+const userName = "gentle";
+const userToken = process.env.NEXT_PUBLIC_STREAM_USER_TOKEN;
 
 const user = {
   id: userId,
@@ -16,38 +26,55 @@ const user = {
 };
 
 const Page = () => {
-  const [channel, setChannel] = useState();
+  // const [channel, setChannel] = useState();
+  // console.log(channel, ">>>chanel");
+
   const client = useCreateChatClient({
     apiKey,
     tokenOrProvider: userToken,
     userData: user,
   });
 
-  useEffect(() => {
-    if (!client) return;
+  const channel = useMemo(() => {
+    if (!client) return null;
 
-    const channel = client.channel('messaging', 'custom_channel_id', {
-      image: 'https://getstream.io/random_png/?name=react',
-      name: 'Talk about React',
+    return client.channel("messaging", "custom_channel_id", {
+      name: "Video Call React",
+      image: "https://getstream.io/random_png/?name=video-call-react",
       members: [userId],
     });
-
-    setChannel(channel);
   }, [client]);
+
+  // useEffect(() => {
+  //   if (!client) return;
+
+  //   const channel = client.channel("messaging", "custom_channel_id", {
+  //     image: "https://getstream.io/random_png/?name=react",
+  //     name: "Talk about React",
+  //     members: [userId],
+  //   });
+
+  //   setChannel(channel);
+  // }, [client]);
 
   if (!client) return <div>Setting up client & connection...</div>;
 
   return (
-    <Chat client={client}>
-      <Channel channel={channel}>
-        <Window>
-          <ChannelHeader />
-          <MessageList />
-          <MessageInput />
-        </Window>
-        <Thread />
-      </Channel>
-    </Chat>
+    <>
+      <div className="chatScreen">
+        <Chat client={client} theme="dark" customClasses="flex gap-6">
+          <ChannelList />
+          <Channel channel={channel}>
+            <Window>
+              <ChannelHeader />
+              <MessageList />
+              <MessageInput />
+            </Window>
+            <Thread />
+          </Channel>
+        </Chat>
+      </div>
+    </>
   );
 };
 
