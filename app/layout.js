@@ -1,4 +1,4 @@
-// import "./globals.css";
+import "./globals.css";
 import Header from "./components/header";
 import { Bebas_Neue, Space_Grotesk } from "next/font/google";
 
