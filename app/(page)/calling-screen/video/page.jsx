@@ -1,11 +1,9 @@
-import React from "react";
+import React from 'react'
 
-const page = () => {
+export default function Page() {
   return (
-    <>
-      <div>video call screen</div>
-    </>
-  );
-};
-
-export default page;
+    <div>
+      
+    </div>
+  )
+}

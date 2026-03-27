@@ -10,9 +10,10 @@ import {
   Thread,
   Window,
   ChannelList,
+  WithDragAndDropUpload,
+  AIStateIndicator,
 } from "stream-chat-react";
 import "stream-chat-react/dist/css/v2/index.css";
-// import '../../../globals.css';
 
 const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
 const userId = "gentle-poetry-3";
@@ -45,18 +46,6 @@ const Page = () => {
     });
   }, [client]);
 
-  // useEffect(() => {
-  //   if (!client) return;
-
-  //   const channel = client.channel("messaging", "custom_channel_id", {
-  //     image: "https://getstream.io/random_png/?name=react",
-  //     name: "Talk about React",
-  //     members: [userId],
-  //   });
-
-  //   setChannel(channel);
-  // }, [client]);
-
   if (!client) return <div>Setting up client & connection...</div>;
 
   return (
@@ -66,9 +55,19 @@ const Page = () => {
           <ChannelList />
           <Channel channel={channel}>
             <Window>
-              <ChannelHeader />
-              <MessageList />
-              <MessageInput />
+              <WithDragAndDropUpload
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flexGrow: 1,
+                  position: "relative",
+                }}
+              >
+                <ChannelHeader />
+                <MessageList />
+                <AIStateIndicator />
+                <MessageInput focus />
+              </WithDragAndDropUpload>
             </Window>
             <Thread />
           </Channel>
