@@ -1,7 +1,13 @@
 import React from "react";
 
 const Page = () => {
-  return <div>Video call</div>;
+  return (
+    <>
+      <div>
+
+      </div>
+    </>
+  );
 };
 
 export default Page;
