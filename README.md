@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Plan ✅
 
-## Getting Started
+1. video page ✅
+2. create or join page ✅
+3. dynamic create or join page
+4. create a room for other to enter into video call
+5. improve UI of all existing UI
+6. Add AI feature like tracking eye ball and face recognition
+7. AI to record movement and analyze it
 
-First, run the development server:
+<!-- ===== Know More About Project -->
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+<!-- ------------- #### ---------- -->
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Store
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### store component is defined using under score.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+like "user_details.tsx"
 
-## Learn More
+## Project Overview
 
-To learn more about Next.js, take a look at the following resources:
+A Next.js app that uses Stream Video to create and join real-time video calls, with a lightweight setup UI and API routes to generate Stream tokens.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js 16.2.1 (App Router)
+- React 19.2.4
+- Stream Video React SDK and Stream Chat
+- Zustand for client state (store files under `app/stores`)
+- Tailwind CSS v4 with PostCSS
 
-## Deploy on Vercel
+## Scripts (package.json)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `npm run dev` - start the dev server
+- `npm run build` - production build
+- `npm run start` - run the production server
+- `npm run lint` - lint the codebase
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Environment Variables
+
+- `NEXT_PUBLIC_API_KEY` - Stream API key used by the client
+- `STREAM_SECRET` - Stream secret used by the token API route
+
+## Routes
+
+- `/` - placeholder landing page (`app/page.tsx`)
+- `/setup-call` - create/join UI (`app/(page)/setup-call/page.tsx`)
+- `/video` - Stream Video call UI (`app/(page)/video/page.tsx`)
+
+## API Routes
+
+- `POST /api/token` - returns a Stream user token from `userId`
+- `POST /api/userDetails` - placeholder for user detail handling (not implemented yet)
+
+## Styling
+
+- Global styles are in `app/globals.css`.
+- Third-party styles are imported in `app/layout.tsx` for Stream Chat and Stream Video.
+
+## Structure
+
+- `app/(page)/setup-call/page.tsx` - setup call UI
+- `app/(page)/video/page.tsx` - Stream Video call screen
+- `app/api/token/route.tsx` - Stream token generator
+- `app/api/userDetails/route.tsx` - user detail endpoint placeholder
+- `app/stores/*` - Zustand stores (underscore file naming)

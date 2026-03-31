@@ -11,10 +11,6 @@ import {
 } from "@stream-io/video-react-sdk";
 import { useEffect, useState } from "react";
 
-// CSS import for Stream Video React SDK
-//  TODO: Not working properly, need to check the documentation for the correct way to import the CSS
-import "@stream-io/video-react-sdk/dist/css/styles.css";
-
 // POST Method:  to fetch the token from the backend API route (api/token/route.tsx)
 const getToken = async (userId: string) => {
   const res = await fetch("api/token", {
