@@ -65,3 +65,11 @@ A Next.js app that uses Stream Video to create and join real-time video calls, w
 - `app/api/token/route.tsx` - Stream token generator
 - `app/api/userDetails/route.tsx` - user detail endpoint placeholder
 - `app/stores/*` - Zustand stores (underscore file naming)
+
+
+
+<!-- helping DOC -->
+
+#### zustand
+
+- https://zustand.docs.pmnd.rs/learn/guides/nextjs
