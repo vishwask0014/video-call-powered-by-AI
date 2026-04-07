@@ -3,15 +3,48 @@
 import { ClipboardCopy, Copy } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useUserStore } from "@/app/stores/user_store";
+import { formatCallUrl } from "@/app/lib/utils";
 
 const Page = () => {
-  const [inviteLink, setInviteLink] = useState(
-    "https://video-call-powered-by-ai.vercel.app/video/my-first-call",
-  );
+  const { user, setUser, roomId, setRoomId, generateAndSetRoomId } = useUserStore();
+  const [inviteLink, setInviteLink] = useState("");
   const [activeBtn, setActiveBtn] = useState(1);
-  const [userProfileImage, setUserProfileImage] = useState("");
-
   const [copied, setCopied] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    username: ""
+  });
+
+  useEffect(() => {
+    if (roomId) {
+      setInviteLink(formatCallUrl(roomId));
+    }
+  }, [roomId]);
+
+  const handleCreateMeeting = () => {
+    if (formData.fullName && formData.username) {
+      const newRoomId = generateAndSetRoomId();
+      setUser({
+        id: formData.username,
+        name: formData.fullName,
+        username: formData.username
+      });
+      window.location.href = `/video/${newRoomId}`;
+    }
+  };
+
+  const handleJoinCall = () => {
+    if (formData.fullName) {
+      const username = formData.username || formData.fullName.toLowerCase().replace(/\s+/g, '_');
+      setUser({
+        id: username,
+        name: formData.fullName,
+        username: username
+      });
+      window.location.href = `/video/${roomId || 'default-room'}`;
+    }
+  };
 
   const handleCopy = async () => {
     try {
@@ -72,6 +105,8 @@ const Page = () => {
                   <input
                     type="text"
                     placeholder="Alex Johnson"
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                     className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                   />
                 </label>
@@ -81,6 +116,8 @@ const Page = () => {
                   <input
                     type="text"
                     placeholder="alex_j"
+                    value={formData.username}
+                    onChange={(e) => setFormData({...formData, username: e.target.value})}
                     className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                   />
                 </label>
@@ -92,15 +129,6 @@ const Page = () => {
                     accept="image/*"
                     className="block w-full cursor-pointer rounded-2xl border border-dashed border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-sm file:mr-4 file:rounded-full file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:border-slate-300"
                   />
-                  {userProfileImage && (
-                    <Image
-                      width={50}
-                      height={50}
-                      className="rounded-full object-cover border-2 border-slate-black text-black"
-                      alt="user profile image"
-                      src=""
-                    />
-                  )}
                 </label>
               </div>
               <div className="grid gap-3">
@@ -111,7 +139,7 @@ const Page = () => {
                   <input
                     type="text"
                     value={inviteLink}
-                    onChange={(event) => setInviteLink(event.target.value)}
+                    readOnly
                     className="h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                   />
                   <button
@@ -127,6 +155,14 @@ const Page = () => {
                   Share this link with others so they can join instantly.
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={handleCreateMeeting}
+                disabled={!formData.fullName || !formData.username}
+                className="h-12 rounded-2xl w-34 flex items-center gap-3 hover:cursor-pointer border border-slate-900 bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Create & Join Meeting
+              </button>
             </>
           ) : (
             <div className="grid grid-cols-2 gap-6">
@@ -134,26 +170,30 @@ const Page = () => {
                 Full Name
                 <input
                   type="text"
-                  placeholder="alex_j"
+                  placeholder="Alex Johnson"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                   className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                 />
               </label>
 
               <label className="grid gap-2 text-sm font-medium text-slate-700 relative">
-                Username (auto-generated)
+                Room ID (optional)
                 <input
-                  disabled
                   type="text"
-                  placeholder="alex_j"
+                  placeholder="Enter room ID or leave empty"
+                  value={roomId}
+                  onChange={(e) => setRoomId(e.target.value)}
                   className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                 />
-                <span className="absolute right-5 pt-6 top-1/2 -translate-y-1/2">
-                  {false ? <Copy /> : <ClipboardCopy />}
-                </span>
               </label>
 
-              <button className="h-12 col-span-2 mt-4 rounded-2xl border border-slate-900 bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900">
-                Start Call
+              <button 
+                onClick={handleJoinCall}
+                disabled={!formData.fullName}
+                className="h-12 col-span-2 mt-4 rounded-2xl border border-slate-900 bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Join Call
               </button>
             </div>
           )}
