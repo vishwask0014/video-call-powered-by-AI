@@ -1,7 +1,8 @@
 "use client";
 
+import CreateMeetingForm from "@/app/components/CreateMeetingForm";
+import JoinMeetingForm from "@/app/components/JoinMeetingForm";
 import { ClipboardCopy, Copy } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/app/stores/user_store";
 import { formatCallUrl } from "@/app/lib/utils";
