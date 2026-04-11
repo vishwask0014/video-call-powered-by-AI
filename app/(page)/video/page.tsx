@@ -12,25 +12,30 @@ import {
 import { useEffect, useState } from "react";
 
 // POST Method:  to fetch the token from the backend API route (api/token/route.tsx)
-const getToken = async (userId: string) => {
-  const res = await fetch("api/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ userId }),
-  });
+const getToken = async (userId: string): Promise<string> => {
+  try {
+    const res = await fetch("/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId }),
+    });
 
-  const data = await res?.json();
-  return data.token;
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data.token || "";
+  } catch (error) {
+    console.error("Error fetching token:", error);
+    return "";
+  }
 };
 
-const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+const apiKey = process.env.NEXT_PUBLIC_API_KEY || "";
 const userId = "sara";
-// Fetch the token for the user and log it to the console
-const token = await getToken(userId).then((token) => {
-  return token;
-});
 
 const user: User = {
   id: userId,
@@ -38,21 +43,43 @@ const user: User = {
 };
 
 const Page = () => {
-  const [client, setClient] = useState<StreamVideoClient>();
-  console.log(client, ">>>>>>json");
-
-  // console.log(client.getDevices);
+  const [client, setClient] = useState<StreamVideoClient | undefined>();
+  const [token, setToken] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const myClient = new StreamVideoClient({ apiKey, token, user });
-    setClient(myClient);
+    const initializeClient = async () => {
+      try {
+        setLoading(true);
+        const fetchedToken = await getToken(userId);
+        setToken(fetchedToken);
+        
+        // Ensure apiKey is a string and token exists
+        if (typeof apiKey === 'string' && apiKey.length > 0 && fetchedToken) {
+          const myClient = new StreamVideoClient({ 
+            apiKey: apiKey as string, 
+            token: fetchedToken, 
+            user 
+          });
+          setClient(myClient);
 
-    return () => {
-      myClient.disconnectUser();
+          return () => {
+            myClient.disconnectUser();
+          };
+        } else {
+          console.error("Missing apiKey or token");
+        }
+      } catch (error) {
+        console.error("Error initializing client:", error);
+      } finally {
+        setLoading(false);
+      }
     };
+
+    initializeClient();
   }, []);
 
-  if (!client) return <div>Loading...</div>;
+  if (loading || !client) return <div>Loading...</div>;
 
   return (
     <>

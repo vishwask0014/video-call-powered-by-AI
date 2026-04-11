@@ -1,150 +1,306 @@
 "use client";
 
-import { Video, Users, Share2, Shield, Brain, Eye } from "lucide-react";
+import { ClipboardCopy, Copy } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+  const [inviteLink, setInviteLink] = useState("");
+  const [activeBtn, setActiveBtn] = useState(1);
+  const [userProfileImage, setUserProfileImage] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    username: "",
+    joinFullName: "",
+    joinLink: ""
+  });
+  const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+
+  // Generate unique room ID
+  const generateRoomId = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  // Generate username from full name
+  const generateUsername = (fullName: string) => {
+    if (!fullName) return "";
+    const names = fullName.toLowerCase().split(' ');
+    const firstName = names[0] || "";
+    const lastName = names[names.length - 1] || "";
+    const randomNum = Math.floor(Math.random() * 1000);
+    return `${firstName}_${lastName.charAt(0)}${randomNum}`;
+  };
+
+  // Create meeting link
+  const createMeeting = async () => {
+    if (!formData.fullName.trim()) {
+      alert('Please enter your full name');
+      return;
+    }
+
+    setIsCreating(true);
+    
+    try {
+      const roomId = generateRoomId();
+      const username = formData.username || generateUsername(formData.fullName);
+      const meetingLink = `${window.location.origin}/video/${roomId}`;
+      
+      // Store user data in localStorage for the video call
+      localStorage.setItem('user', JSON.stringify({
+        id: username,
+        name: formData.fullName,
+        username: username,
+        role: 'host'
+      }));
+      
+      setInviteLink(meetingLink);
+      setFormData(prev => ({ ...prev, username }));
+      
+      // Auto-redirect after 2 seconds
+      setTimeout(() => {
+        router.push(`/video/${roomId}`);
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error creating meeting:', error);
+      alert('Failed to create meeting. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  // Join meeting
+  const joinMeeting = async () => {
+    if (!formData.joinFullName.trim()) {
+      alert('Please enter your full name');
+      return;
+    }
+
+    if (!formData.joinLink.trim()) {
+      alert('Please enter a meeting link');
+      return;
+    }
+
+    setIsJoining(true);
+
+    try {
+      // Extract room ID from link
+      const urlMatch = formData.joinLink.match(/\/video\/([a-zA-Z0-9-]+)/);
+      if (!urlMatch) {
+        throw new Error('Invalid meeting link');
+      }
+
+      const roomId = urlMatch[1];
+      const username = generateUsername(formData.joinFullName);
+
+      // Store user data in localStorage for the video call
+      localStorage.setItem('user', JSON.stringify({
+        id: username,
+        name: formData.joinFullName,
+        username: username,
+        role: 'participant'
+      }));
+
+      // Redirect to the meeting
+      router.push(`/video/${roomId}`);
+      
+    } catch (error) {
+      console.error('Error joining meeting:', error);
+      alert('Invalid meeting link. Please check and try again.');
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  };
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Background decorations */}
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[38rem] -translate-x-1/2 rounded-full bg-gradient-to-br from-blue-200/70 via-purple-200/60 to-pink-200/60 blur-3xl" />
+    <div className="relative min-h-screen overflow-hidden bg-[#f7f7fb] text-slate-900">
+      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[38rem] -translate-x-1/2 rounded-full bg-gradient-to-br from-amber-200/70 via-rose-200/60 to-sky-200/60 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 right-0 h-72 w-72 translate-x-1/3 translate-y-1/3 rounded-full bg-gradient-to-tr from-emerald-200/60 via-teal-200/50 to-cyan-200/60 blur-3xl" />
 
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 py-16">
-        {/* Header */}
-        <header className="text-center space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-800">
-            <Brain className="h-4 w-4" />
-            Powered by AI
+      <div className="relative mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-14">
+        <header className="space-y-2 flex justify-between ">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
+              Stream Video
+            </p>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              Start a video call in seconds
+            </h1>
+            <p className="max-w-2xl text-base text-slate-600 sm:text-lg">
+              Add your details, share an invite link, and choose whether to join
+              or create a meeting.
+            </p>
           </div>
-          
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
-            Interview Smarter with
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-              AI Insights
-            </span>
-          </h1>
-          
-          <p className="mx-auto max-w-2xl text-lg text-gray-600 sm:text-xl">
-            Conduct professional video interviews with real-time emotion detection, 
-            confidence analysis, and eye contact tracking powered by advanced AI.
-          </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Link 
-              href="/setup-call"
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:shadow-xl hover:-translate-y-0.5"
-            >
-              <Video className="h-5 w-5" />
-              Create Video Call
-            </Link>
-            
-            <Link 
-              href="/setup-call"
-              className="inline-flex items-center gap-2 rounded-2xl border-2 border-gray-300 bg-white px-8 py-4 text-lg font-semibold text-gray-800 shadow-lg transition hover:border-gray-400 hover:shadow-xl hover:-translate-y-0.5"
-            >
-              <Share2 className="h-5 w-5" />
-              Join with Link
-            </Link>
 
-            <Link 
-              href="/test-video"
-              className="inline-flex items-center gap-2 rounded-2xl border-2 border-orange-300 bg-orange-50 px-8 py-4 text-lg font-semibold text-orange-800 shadow-lg transition hover:border-orange-400 hover:shadow-xl hover:-translate-y-0.5"
-            >
-              <Video className="h-5 w-5" />
-              Test Video
-            </Link>
-          </div>
+          <Link href="/test-video" className="border w-fit h-fit rounded-lg px-6 py-3 text-white bg-emerald-600 font-medium ">
+            Test Video
+          </Link>
+
         </header>
 
-        {/* Features Grid */}
-        <section className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-3xl border border-white/70 bg-white/70 p-6 shadow-lg backdrop-blur-sm transition hover:shadow-xl hover:-translate-y-1">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 text-white mb-4">
-              <Brain className="h-6 w-6" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Emotion Detection</h3>
-            <p className="text-gray-600">
-              Real-time analysis of facial expressions to understand emotional states during interviews.
-            </p>
-          </div>
+        <div className="grid gap-6 rounded-3xl border border-white/70 bg-white/70 p-6 shadow-[0_24px_60px_-30px_rgba(15,23,42,0.45)] backdrop-blur sm:p-8">
+          {/* ========= 
+              tab group + active Button On click fxn 
+              ========= */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              className={`h-12 rounded-2xl text-sm font-semibold transition ${activeBtn === 1 ? "bg-gradient-to-r text-white from-emerald-500 via-teal-500 to-cyan-500 shadow-lg shadow-emerald-500/30 " : null}`}
+              onClick={() => setActiveBtn(1)}
+            >
+              Create meeting link
+            </button>
 
-          <div className="rounded-3xl border border-white/70 bg-white/70 p-6 shadow-lg backdrop-blur-sm transition hover:shadow-xl hover:-translate-y-1">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white mb-4">
-              <Eye className="h-6 w-6" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Eye Contact Tracking</h3>
-            <p className="text-gray-600">
-              Monitor engagement levels through advanced eye contact detection algorithms.
-            </p>
+            <button
+              type="button"
+              className={`h-12 rounded-2xl text-sm font-semibold transition ${activeBtn === 2 ? "bg-gradient-to-r text-white from-emerald-500 via-teal-500 to-cyan-500 shadow-lg shadow-emerald-500/30 " : null}`}
+              onClick={() => setActiveBtn(2)}
+            >
+              Join call now
+            </button>
           </div>
+          {activeBtn === 1 ? (
+            <>
+              {" "}
+              <div className="grid gap-5 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  Full name
+                  <input
+                    type="text"
+                    placeholder="Alex Johnson"
+                    value={formData.fullName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                    className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                  />
+                </label>
 
-          <div className="rounded-3xl border border-white/70 bg-white/70 p-6 shadow-lg backdrop-blur-sm transition hover:shadow-xl hover:-translate-y-1">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 text-white mb-4">
-              <Shield className="h-6 w-6" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure & Private</h3>
-            <p className="text-gray-600">
-              End-to-end encrypted video calls with secure room generation and access control.
-            </p>
-          </div>
-        </section>
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  Username (optional)
+                  <input
+                    type="text"
+                    placeholder="alex_j"
+                    value={formData.username}
+                    onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                    className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                  />
+                </label>
 
-        {/* How it Works */}
-        <section className="rounded-3xl border border-white/70 bg-white/70 p-8 shadow-lg backdrop-blur-sm">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">How It Works</h2>
-          
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="text-center space-y-3">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white text-2xl font-bold mx-auto">
-                1
+                <label className="grid gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
+                  Profile image (optional)
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="block w-full cursor-pointer rounded-2xl border border-dashed border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-sm file:mr-4 file:rounded-full file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:border-slate-300"
+                  />
+                  {userProfileImage && (
+                    <Image
+                      width={50}
+                      height={50}
+                      className="rounded-full object-cover border-2 border-slate-black text-black"
+                      alt="user profile image"
+                      src=""
+                    />
+                  )}
+                </label>
               </div>
-              <h3 className="font-semibold text-gray-900">Create or Join</h3>
-              <p className="text-sm text-gray-600">
-                Start a new interview room or join with a shared link
-              </p>
-            </div>
-            
-            <div className="text-center space-y-3">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-2xl font-bold mx-auto">
-                2
+              
+              <div className="grid gap-3">
+                <label className="text-sm font-medium text-slate-700">
+                  Meeting link
+                </label>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <input
+                    type="text"
+                    value={inviteLink}
+                    readOnly
+                    placeholder="Click 'Create Meeting' to generate link"
+                    className="h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    disabled={!inviteLink}
+                    className="h-12 rounded-2xl w-34 flex items-center gap-3 hover:cursor-pointer border border-slate-900 bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {copied ? <ClipboardCopy /> : <Copy />}{" "}
+                    {copied ? "Copied" : "Copy"}
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {inviteLink ? "Share this link with others so they can join instantly." : "Create a meeting to generate your invite link."}
+                </p>
               </div>
-              <h3 className="font-semibold text-gray-900">Enable AI Analysis</h3>
-              <p className="text-sm text-gray-600">
-                Turn on emotion detection for insightful interview analytics
-              </p>
-            </div>
-            
-            <div className="text-center space-y-3">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-red-500 text-white text-2xl font-bold mx-auto">
-                3
-              </div>
-              <h3 className="font-semibold text-gray-900">Get Real Insights</h3>
-              <p className="text-sm text-gray-600">
-                Receive live feedback on confidence, engagement, and emotional responses
-              </p>
-            </div>
-          </div>
-        </section>
+              
+              <button
+                onClick={createMeeting}
+                disabled={isCreating || !formData.fullName.trim()}
+                className="h-12 rounded-2xl border border-slate-900 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 px-6 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCreating ? "Creating..." : inviteLink ? "Join Meeting" : "Create Meeting"}
+              </button>
+              
+              {inviteLink && (
+                <div className="text-center text-sm text-emerald-600 font-medium">
+                  Meeting created! You'll be redirected automatically...
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                Full Name
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={formData.joinFullName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, joinFullName: e.target.value }))}
+                  className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                />
+              </label>
 
-        {/* CTA Section */}
-        <section className="text-center space-y-6 rounded-3xl border border-white/70 bg-gradient-to-br from-blue-600 to-purple-600 p-8 shadow-lg backdrop-blur-sm">
-          <h2 className="text-3xl font-bold text-white">
-            Ready to Transform Your Interviews?
-          </h2>
-          <p className="text-lg text-blue-100 max-w-2xl mx-auto">
-            Join thousands of professionals who are already using AI-powered insights 
-            to make better hiring decisions.
-          </p>
-          <Link 
-            href="/setup-call"
-            className="inline-flex items-center gap-2 rounded-2xl bg-white px-8 py-4 text-lg font-semibold text-blue-600 shadow-lg transition hover:shadow-xl hover:-translate-y-0.5"
-          >
-            <Users className="h-5 w-5" />
-            Start Your First Interview
-          </Link>
-        </section>
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                Meeting Link
+                <input
+                  type="text"
+                  placeholder="Paste meeting link here"
+                  value={formData.joinLink}
+                  onChange={(e) => setFormData(prev => ({ ...prev, joinLink: e.target.value }))}
+                  className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                />
+              </label>
+
+              <button
+                onClick={joinMeeting}
+                disabled={isJoining || !formData.joinFullName.trim() || !formData.joinLink.trim()}
+                className="h-12 rounded-2xl border border-slate-900 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 px-6 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isJoining ? "Joining..." : "Join Meeting"}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
-}
+};
