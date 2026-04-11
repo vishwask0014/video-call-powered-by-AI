@@ -25,12 +25,8 @@ const getToken = async (userId: string) => {
   return data.token;
 };
 
-const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+const apiKey = process.env.NEXT_PUBLIC_API_KEY || "";
 const userId = "sara";
-// Fetch the token for the user and log it to the console
-const token = await getToken(userId).then((token) => {
-  return token;
-});
 
 const user: User = {
   id: userId,
@@ -39,17 +35,32 @@ const user: User = {
 
 const Page = () => {
   const [client, setClient] = useState<StreamVideoClient>();
-  console.log(client, ">>>>>>json");
-
-  // console.log(client.getDevices);
+  const [token, setToken] = useState<string>("");
 
   useEffect(() => {
-    const myClient = new StreamVideoClient({ apiKey, token, user });
-    setClient(myClient);
+    const initializeClient = async () => {
+      try {
+        const fetchedToken = await getToken(userId);
+        setToken(fetchedToken);
+        
+        if (apiKey && fetchedToken) {
+          const myClient = new StreamVideoClient({ 
+            apiKey, 
+            token: fetchedToken, 
+            user 
+          });
+          setClient(myClient);
 
-    return () => {
-      myClient.disconnectUser();
+          return () => {
+            myClient.disconnectUser();
+          };
+        }
+      } catch (error) {
+        console.error("Error initializing client:", error);
+      }
     };
+
+    initializeClient();
   }, []);
 
   if (!client) return <div>Loading...</div>;
