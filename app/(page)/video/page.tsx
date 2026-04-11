@@ -12,17 +12,26 @@ import {
 import { useEffect, useState } from "react";
 
 // POST Method:  to fetch the token from the backend API route (api/token/route.tsx)
-const getToken = async (userId: string) => {
-  const res = await fetch("api/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ userId }),
-  });
+const getToken = async (userId: string): Promise<string> => {
+  try {
+    const res = await fetch("/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId }),
+    });
 
-  const data = await res?.json();
-  return data.token;
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data.token || "";
+  } catch (error) {
+    console.error("Error fetching token:", error);
+    return "";
+  }
 };
 
 const apiKey = process.env.NEXT_PUBLIC_API_KEY || "";
@@ -34,18 +43,21 @@ const user: User = {
 };
 
 const Page = () => {
-  const [client, setClient] = useState<StreamVideoClient>();
+  const [client, setClient] = useState<StreamVideoClient | undefined>();
   const [token, setToken] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const initializeClient = async () => {
       try {
+        setLoading(true);
         const fetchedToken = await getToken(userId);
         setToken(fetchedToken);
         
-        if (apiKey && fetchedToken) {
+        // Ensure apiKey is a string and token exists
+        if (typeof apiKey === 'string' && apiKey.length > 0 && fetchedToken) {
           const myClient = new StreamVideoClient({ 
-            apiKey, 
+            apiKey: apiKey as string, 
             token: fetchedToken, 
             user 
           });
@@ -54,16 +66,20 @@ const Page = () => {
           return () => {
             myClient.disconnectUser();
           };
+        } else {
+          console.error("Missing apiKey or token");
         }
       } catch (error) {
         console.error("Error initializing client:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     initializeClient();
   }, []);
 
-  if (!client) return <div>Loading...</div>;
+  if (loading || !client) return <div>Loading...</div>;
 
   return (
     <>
